@@ -1,0 +1,73 @@
+
+# Questions
+
+1. How have country rankings shifted over time?
+
+2. What is the distribution of participation by gender? What's the distribution of top scores?
+
+3. How does team size or team composition (e.g., number of first-time participants vs. veterans) relate to overall country performance?
+
+# Load Data
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+# Option 1: tidytuesdayR package 
+install.packages("tidytuesdayR")
+
+tuesdata <- tidytuesdayR::tt_load('2024-09-24')
+
+country_results_df <- tuesdata$country_results_df
+individual_results_df <- tuesdata$individual_results_df
+timeline_df <- tuesdata$timeline_df
+```
+
+Alternative way to load in data using link from github
+```{r eval = FALSE}
+# Option 2: Read directly from GitHub
+
+country_results_df <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-09-24/country_results_df.csv')
+individual_results_df <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-09-24/individual_results_df.csv')
+timeline_df <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-09-24/timeline_df.csv')
+```
+
+# Explore Data 
+
+How many medals each country has gotten?
+```{r}
+medals <- country_results_df %>% 
+  select(year, country, awards_gold, awards_silver, awards_bronze) %>% 
+  mutate(total = awards_gold + awards_silver + awards_bronze) %>%  # create total column
+  group_by(country) %>% 
+  summarize(all = sum(total), 
+            gold = sum(awards_gold),
+            silver = sum(awards_silver),
+            bronze = sum(awards_bronze)) %>% 
+  arrange(-all)
+
+year_country <- country_results_df %>% 
+  select(year, country, awards_gold, awards_silver, awards_bronze) %>% 
+  mutate(total = awards_gold + awards_silver + awards_bronze) %>% 
+  pivot_wider(names_from = country,
+              values_from = c(total, awards_gold, awards_silver, awards_bronze))
+```
+
+
+```{r}
+ggplot(data = medals %>% 
+         head(10), 
+       aes(x = country, y = gold)) +
+  geom_col() +
+  theme_classic()
+
+ggplot(data = medals %>% 
+         head(10), 
+       aes(x = country, y = silver)) +
+  geom_col() +
+  theme_classic()
+```
+
+
+
